@@ -1,227 +1,452 @@
-# Airbnb Scraper API
+# 🏠 Airbnb Scraper API
 
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)](https://expressjs.com/)
-[![Playwright](https://img.shields.io/badge/Playwright-1.60-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/license/isc-license-txt)
+<div align="center">
 
-A developer-friendly REST API that extracts visible Airbnb property details and
-city search cards through Playwright-powered browser automation. It offers
-validated property URLs, optional MySQL caching, structured JSON logs, request
-correlation, and clear failure behavior for dynamic third-party pages.
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![REST API](https://img.shields.io/badge/REST_API-02569B?style=for-the-badge)
+![License](https://img.shields.io/badge/License-ISC-green?style=for-the-badge)
 
-> [!IMPORTANT]
-> This project accesses publicly rendered third-party pages through browser
-> automation. Before deploying it, confirm that your intended use complies
-> with applicable site terms, policies, and laws.
+A production-oriented REST API for scraping Airbnb property details and listings using browser automation.
 
-## Why This Exists
+</div>
 
-Airbnb listings are rendered dynamically, making basic HTML fetching unreliable
-for use cases such as property analysis, approved research, testing pipelines,
-or demonstration applications. This API wraps that complexity behind simple
-JSON endpoints while retaining key pricing context such as dates and guests.
+---
 
-## Features
+# ✨ Features
 
-- Scrape a specific Airbnb room page for title, visible price, rating, and room photos.
-- Scrape visible search cards by city.
-- Accept regional Airbnb domains such as `airbnb.co.in`.
-- Preserve query context that can affect displayed price.
-- Cache property results for six hours when MySQL is enabled.
-- Operate without MySQL for quick local evaluation.
-- Emit structured JSON logs with end-to-end `x-request-id` correlation.
-- Throttle API traffic to 10 requests per minute per IP and process.
+- 🔍 Scrape Airbnb property details
+- 🏘 Fetch city listings
+- 🖼 Extract images, ratings & prices
+- ⚡ Playwright-powered browser automation
+- 🗄 Optional MySQL caching
+- 🧾 Structured logging
+- 🛡 Rate limiting & validation
+- 📦 RESTful API architecture
+- 🧪 Unit testing support
+- 🌍 Environment-based configuration
 
-## Quick Start
+---
 
-### Requirements
+# 📸 Preview Workflow
 
-- Node.js 20 or later
-- npm
-- Optional: MySQL 8 or later for persistence and property caching
+## 🔄 Request Lifecycle
 
-### Install And Run
+```mermaid
+flowchart TD
+
+A[Client Request] --> B[Express API]
+
+B --> C[Validation Middleware]
+
+C --> D{Cached Data Exists?}
+
+D -->|Yes| E[Fetch From MySQL]
+
+D -->|No| F[Launch Playwright Browser]
+
+F --> G[Scrape Airbnb]
+
+G --> H[Transform Data]
+
+H --> I[Store in Database]
+
+E --> J[Send JSON Response]
+
+I --> J
+```
+
+---
+
+# 🧠 System Architecture
+
+```mermaid
+graph LR
+
+Client --> API[Express Server]
+
+API --> Routes[Routes Layer]
+
+Routes --> Scraper[Scraper Service]
+
+Scraper --> Playwright[Playwright Browser]
+
+Playwright --> Airbnb[Airbnb Website]
+
+Routes --> DB[(MySQL Database)]
+
+DB --> Routes
+
+Routes --> Response[JSON Response]
+```
+
+---
+
+# 🔁 Sequence Diagram
+
+```mermaid
+sequenceDiagram
+
+participant User
+participant API
+participant DB
+participant Scraper
+participant Airbnb
+
+User->>API: GET /api/property?url=...
+API->>DB: Check cached property
+
+alt Cache Hit
+    DB-->>API: Return cached data
+    API-->>User: JSON Response
+else Cache Miss
+    API->>Scraper: Start scraping
+    Scraper->>Airbnb: Open listing page
+    Airbnb-->>Scraper: HTML + Dynamic Content
+    Scraper-->>API: Structured property data
+    API->>DB: Store scraped data
+    API-->>User: JSON Response
+end
+```
+
+---
+
+# 🛠 Tech Stack
+
+## Backend
+
+- Node.js
+- Express.js
+
+## Browser Automation
+
+- Playwright
+- Chromium
+
+## Database
+
+- MySQL
+
+## Utilities
+
+- dotenv
+- express-rate-limit
+- mysql2
+
+## Development
+
+- Nodemon
+- Node Test Runner
+
+---
+
+# 📂 Project Structure
 
 ```bash
-npm install
-npm run setup-browser
+airbnb-scrapper/
+│
+├── db/
+│   ├── connection.js
+│   └── schema.sql
+│
+├── docs/
+│   ├── architecture/
+│   ├── api/
+│   ├── deployment/
+│   ├── guides/
+│   └── README.md
+│
+├── middleware/
+│   └── requestLogger.js
+│
+├── routes/
+│   ├── property.js
+│   └── listings.js
+│
+├── scraper/
+│   ├── propertyScraper.js
+│   └── airbnbScraper.js
+│
+├── utils/
+│   ├── airbnbUrl.js
+│   └── logger.js
+│
+├── test/
+│   └── airbnbUrl.test.js
+│
+├── server.js
+├── package.json
+├── .env.example
+└── README.md
 ```
 
-Create local configuration:
+---
 
-```powershell
-Copy-Item .env.example .env
+# 🚀 API Features
+
+## 🏠 Property Scraping
+
+Extracts:
+
+- Property title
+- Price
+- Rating
+- Room ID
+- Images
+- Property URL
+
+### Endpoint
+
+```http
+GET /api/property
 ```
 
-For a database-free first run, set:
-
-```dotenv
-PORT=3000
-LOG_LEVEL=info
-DB_ENABLED=false
-AIRBNB_BASE_URL=https://www.airbnb.co.in
-```
-
-Start the API:
-
-```bash
-npm start
-```
-
-Verify it:
-
-```bash
-curl http://localhost:3000/health
-```
-
-```json
-{
-  "status": "ok"
-}
-```
-
-> [!TIP]
-> On Windows PowerShell systems where script execution blocks `npm.ps1`, use
-> `npm.cmd start`, `npm.cmd test`, and `npm.cmd run setup-browser`.
-
-## API Examples
-
-### Scrape A Property
-
-Always URL-encode the nested Airbnb URL:
+### Example Request
 
 ```bash
 curl --get "http://localhost:3000/api/property" \
-  --data-urlencode "url=https://www.airbnb.co.in/rooms/1588241649003481269?check_in=2026-05-29&check_out=2026-05-31" \
-  -H "x-request-id: readme-property-demo"
+--data-urlencode "url=https://www.airbnb.co.in/rooms/123456"
 ```
+
+### Example Response
 
 ```json
 {
   "source": "scraped",
   "stored": false,
   "data": {
-    "room_id": "1588241649003481269",
-    "property_url": "https://www.airbnb.co.in/rooms/1588241649003481269?check_in=2026-05-29&check_out=2026-05-31",
-    "title": "Staycation 2BHK Apartment In Dehradun.",
+    "room_id": "123456",
+    "title": "Luxury Apartment",
     "price": "₹6,848",
     "rating": "5.0",
     "images": [
-      "https://a0.muscache.com/im/pictures/hosting/Hosting-1588241649003481269/original/example.jpeg"
+      "https://image-url.jpg"
     ]
   }
 }
 ```
 
-### Scrape City Search Cards
+---
+
+## 🌆 Listings Scraping
+
+Fetch Airbnb listings by city.
+
+### Endpoint
+
+```http
+GET /api/listings/:city
+```
+
+### Example Request
 
 ```bash
-curl "http://localhost:3000/api/listings/Dehradun"
+curl http://localhost:3000/api/listings/Dehradun
 ```
+
+### Example Response
 
 ```json
 [
   {
-    "title": "Place to stay in Dehradun",
+    "title": "Stay in Dehradun",
     "price": "₹16,138",
-    "link": "https://www.airbnb.co.in/rooms/1692751558036902640"
+    "link": "https://www.airbnb.co.in/rooms/12345"
   }
 ]
 ```
 
-Live page output changes with availability, stay context, region, and Airbnb
-markup. The examples illustrate the response contract rather than guaranteed
-current availability or pricing.
+---
 
-## Architecture Preview
+# ⚙️ Installation
 
-```mermaid
-flowchart LR
-    C[Client] -->|REST request| A[Express API]
-    A --> V[Validation + rate limit + JSON logs]
-    V --> D{Fresh property cache?}
-    D -- yes --> M[(MySQL)]
-    D -- no --> P[Playwright + Chromium]
-    P --> X[Airbnb rendered pages]
-    P --> M
-    M --> A
-    A -->|JSON response| C
+## 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/your-username/airbnb-scrapper.git
+
+cd airbnb-scrapper
 ```
 
-| Layer | Responsibility |
-| --- | --- |
-| Express routes | Input validation, cache coordination, JSON responses |
-| Playwright scrapers | Page rendering and visible data extraction |
-| MySQL | Optional property cache and listing storage |
-| Middleware/utilities | Request IDs, logs, rate limiting, URL normalization |
+---
 
-Read the full [architecture documentation](docs/architecture/overview.md) and
-[scraping logic deep dive](docs/architecture/scraping-and-processing.md).
+## 2️⃣ Install Dependencies
 
-## Configuration
+```bash
+npm install
+```
 
-| Variable | Required | Example | Purpose |
-| --- | --- | --- | --- |
-| `PORT` | No | `3000` | API listener port |
-| `LOG_LEVEL` | No | `info` | JSON log threshold: `debug`, `info`, `warn`, `error` |
-| `DB_ENABLED` | No | `false` | Explicitly disable MySQL when `false` |
-| `DB_HOST` | For MySQL | `localhost` | Database host |
-| `DB_USER` | For MySQL | `root` | Database user |
-| `DB_PASSWORD` | For MySQL | `secret` | Database password |
-| `DB_NAME` | For MySQL | `airbnb_scraper` | Database name |
-| `AIRBNB_BASE_URL` | No | `https://www.airbnb.co.in` | Regional host for city searches |
+---
 
-To enable MySQL, initialize the database:
+## 3️⃣ Install Browser
+
+```bash
+npm run setup-browser
+```
+
+---
+
+# 📝 Environment Variables
+
+Create a `.env` file:
+
+```env
+PORT=3000
+
+LOG_LEVEL=info
+
+DB_ENABLED=false
+
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=password
+DB_NAME=airbnb_scraper
+
+AIRBNB_BASE_URL=https://www.airbnb.co.in
+```
+
+---
+
+# ▶️ Running Application
+
+## Development
+
+```bash
+npm run dev
+```
+
+## Production
+
+```bash
+npm start
+```
+
+---
+
+# 🗄 Database Setup
+
+Create schema:
 
 ```bash
 mysql -u root -p < db/schema.sql
 ```
 
-Then set `DB_ENABLED=true` and configure the `DB_*` variables.
+Enable caching:
 
-## Scripts
+```env
+DB_ENABLED=true
+```
 
-| Command | Description |
-| --- | --- |
-| `npm start` | Start the production-style Node process |
-| `npm run dev` | Start with `nodemon` reloads during development |
-| `npm run setup-browser` | Install the Playwright Chromium runtime |
-| `npm test` | Run the Node test suite |
+---
 
-## Documentation
+# 📌 API Endpoints
 
-| Guide | Description |
-| --- | --- |
-| [Documentation home](docs/README.md) | Complete navigation and implementation status |
-| [Getting started](docs/guides/getting-started.md) | Full local setup and first requests |
-| [Architecture](docs/architecture/overview.md) | System design and sequence diagrams |
-| [API reference](docs/api/reference.md) | Parameters, payloads, errors, and edge cases |
-| [Database](docs/database/schema.md) | Schema, cache identity, and indexes |
-| [Development guide](docs/guides/development.md) | Stack decisions, logging, tests, and conventions |
-| [Deployment](docs/deployment/production.md) | Recommended production architecture and CI/CD |
-| [Security](docs/security.md) | Threat boundaries and deployment hardening |
-| [Troubleshooting](docs/troubleshooting/common-issues.md) | Failure diagnosis and recovery |
-| [Production readiness](docs/engineering/production-readiness.md) | Risks and roadmap |
-| [Contributing](docs/contributing.md) | Contribution and review workflow |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health Check |
+| GET | `/api/property` | Scrape Property |
+| GET | `/api/listings/:city` | Scrape Listings |
 
-## Current Limitations
+---
 
-- Authentication and authorization are not implemented.
-- Browser scraping occurs synchronously in the HTTP request and is not queued.
-- Browser concurrency is not capped.
-- Rate limiting is in-memory and therefore single-instance only.
-- Airbnb markup or anti-automation behavior can break extraction.
-- City listing storage is write-through; city requests do not read cached results.
+# 🧪 Testing
 
-See [Production readiness](docs/engineering/production-readiness.md) before
-exposing the service beyond controlled use.
+Run tests:
 
-## Contributing
+```bash
+npm test
+```
 
-Contributions should include relevant tests and documentation changes. Start
-with the [contributor guide](docs/contributing.md).
+Current tests cover:
 
-## License
+- URL validation
+- Utility functions
 
-Licensed under the ISC License as declared in `package.json`.
+---
+
+# 🔒 Security Features
+
+- Rate limiting
+- Request correlation IDs
+- Input validation
+- URL normalization
+- Structured logging
+
+---
+
+# 📈 Caching Strategy
+
+The application optionally stores scraped data inside MySQL.
+
+Benefits:
+
+- Faster responses
+- Reduced browser execution
+- Reduced scraping load
+- Lower infrastructure cost
+
+---
+
+# ⚠️ Current Limitations
+
+- No authentication system
+- No Redis caching
+- No queue system
+- No distributed rate limiting
+- Airbnb DOM structure dependency
+- Browser concurrency not optimized
+
+---
+
+# 🔮 Future Improvements
+
+- JWT Authentication
+- Redis Integration
+- Queue-based scraping
+- Docker support
+- Kubernetes deployment
+- Browser pooling
+- CI/CD pipelines
+- Monitoring dashboard
+- Webhook support
+
+---
+
+# 📚 Documentation
+
+Detailed docs available inside `/docs`
+
+Includes:
+
+- Architecture
+- API Reference
+- Deployment Guide
+- Security Guide
+- Troubleshooting
+- Production Notes
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome.
+
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Push changes
+5. Open Pull Request
+
+---
+
+# ⭐ Support
+
+If you found this project useful, give it a ⭐ on GitHub.
+
+---
+
+# 📄 License
+
+Licensed under ISC License.
